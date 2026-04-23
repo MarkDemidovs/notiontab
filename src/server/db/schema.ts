@@ -42,7 +42,7 @@ export const projects = createTable(
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
   (t) => [
-    index("clerk_user_id_idx").on(t.clerkUserId),
+    index("projects_clerk_user_id_idx").on(t.clerkUserId),
     index("name_idx").on(t.name),
   ],
 );
