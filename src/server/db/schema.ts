@@ -11,26 +11,11 @@ import { index, pgTableCreator } from "drizzle-orm/pg-core";
  */
 export const createTable = pgTableCreator((name) => `wegotit_${name}`);
 
-export const users = createTable(
-  "user",
-  (d) => ({
-    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    email: d.varchar({ length: 256 }).notNull().unique(),
-    password: d.varchar({ length: 256 }).notNull(),
-    createdAt: d
-      .timestamp({ withTimezone: true })
-      .$defaultFn(() => /* @__PURE__ */ new Date())
-      .notNull(),
-    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
-  }),
-  (t) => [index("email_idx").on(t.email)],
-);
-
 export const profiles = createTable(
   "profile",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    userId: d.integer().notNull().references(() => users.id, { onDelete: "cascade" }),
+    clerkUserId: d.varchar({ length: 256 }).notNull().unique(), // From Clerk
     fullName: d.varchar({ length: 256 }),
     bio: d.text(),
     avatarUrl: d.varchar({ length: 512 }),
@@ -40,7 +25,7 @@ export const profiles = createTable(
       .notNull(),
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
-  (t) => [index("profile_user_id_idx").on(t.userId)],
+  (t) => [index("clerk_user_id_idx").on(t.clerkUserId)],
 );
 
 export const projects = createTable(
