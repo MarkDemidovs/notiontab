@@ -11,7 +11,6 @@ import { index, pgTableCreator } from "drizzle-orm/pg-core";
  */
 export const createTable = pgTableCreator((name) => `wegotit_${name}`);
 
-
 export const users = createTable(
   "user",
   (d) => ({
@@ -26,6 +25,7 @@ export const users = createTable(
   }),
   (t) => [index("email_idx").on(t.email)],
 );
+
 export const profiles = createTable(
   "profile",
   (d) => ({
@@ -40,7 +40,7 @@ export const profiles = createTable(
       .notNull(),
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
-  (t) => [index("user_id_idx").on(t.userId)],
+  (t) => [index("profile_user_id_idx").on(t.userId)],
 );
 
 export const projects = createTable(
@@ -75,9 +75,8 @@ export const projectRolesNeeded = createTable(
       .$defaultFn(() => /* @__PURE__ */ new Date())
       .notNull(),
   }),
-  (t) => [index("project_id_idx").on(t.projectId)],
+  (t) => [index("project_roles_needed_project_id_idx").on(t.projectId)],
 );
-
 
 export const applications = createTable(
   "application",
@@ -94,12 +93,11 @@ export const applications = createTable(
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
   (t) => [
-    index("user_id_idx").on(t.userId),
+    index("applications_user_id_idx").on(t.userId),
     index("project_role_needed_id_idx").on(t.projectRoleNeededId),
     index("status_idx").on(t.status),
   ],
 );
- 
 
 export const projectMembers = createTable(
   "project_member",
@@ -114,11 +112,10 @@ export const projectMembers = createTable(
       .notNull(),
   }),
   (t) => [
-    index("project_id_idx").on(t.projectId),
-    index("user_id_idx").on(t.userId),
+    index("project_members_project_id_idx").on(t.projectId),
+    index("project_members_user_id_idx").on(t.userId),
   ],
 );
-
 
 export const notifications = createTable(
   "notification",
@@ -135,7 +132,7 @@ export const notifications = createTable(
       .notNull(),
   }),
   (t) => [
-    index("user_id_idx").on(t.userId),
+    index("notifications_user_id_idx").on(t.userId),
     index("is_read_idx").on(t.isRead),
   ],
 );
