@@ -2,14 +2,23 @@
 
 import { useEffect, useState } from "react";
 
+interface Project {
+  id: number;
+  clerkUserId: string;
+  name: string;
+  description: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export default function HomePage() {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/projects")
+    void fetch("/api/projects")
       .then((res) => res.json())
-      .then((data) => setProjects(data))
+      .then((data: Project[]) => setProjects(data))
       .finally(() => setLoading(false));
   }, []);
 
