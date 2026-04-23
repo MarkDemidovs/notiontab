@@ -15,7 +15,7 @@ export const profiles = createTable(
   "profile",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    clerkUserId: d.varchar({ length: 256 }).notNull().unique(), // From Clerk
+    clerkUserId: d.varchar({ length: 256 }).notNull().unique(),
     fullName: d.varchar({ length: 256 }),
     bio: d.text(),
     avatarUrl: d.varchar({ length: 512 }),
@@ -32,7 +32,7 @@ export const projects = createTable(
   "project",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    ownerId: d.integer().notNull().references(() => users.id, { onDelete: "cascade" }),
+    clerkUserId: d.varchar({ length: 256 }).notNull(),
     name: d.varchar({ length: 256 }).notNull(),
     description: d.text(),
     createdAt: d
@@ -42,7 +42,7 @@ export const projects = createTable(
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
   (t) => [
-    index("owner_id_idx").on(t.ownerId),
+    index("clerk_user_id_idx").on(t.clerkUserId),
     index("name_idx").on(t.name),
   ],
 );
@@ -67,7 +67,7 @@ export const applications = createTable(
   "application",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    userId: d.integer().notNull().references(() => users.id, { onDelete: "cascade" }),
+    clerkUserId: d.varchar({ length: 256 }).notNull(),
     projectRoleNeededId: d.integer().notNull().references(() => projectRolesNeeded.id, { onDelete: "cascade" }),
     status: d.varchar({ length: 50 }).notNull().default("pending"),
     message: d.text(),
@@ -78,7 +78,7 @@ export const applications = createTable(
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
   (t) => [
-    index("applications_user_id_idx").on(t.userId),
+    index("applications_clerk_user_id_idx").on(t.clerkUserId),
     index("project_role_needed_id_idx").on(t.projectRoleNeededId),
     index("status_idx").on(t.status),
   ],
@@ -89,7 +89,7 @@ export const projectMembers = createTable(
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
     projectId: d.integer().notNull().references(() => projects.id, { onDelete: "cascade" }),
-    userId: d.integer().notNull().references(() => users.id, { onDelete: "cascade" }),
+    clerkUserId: d.varchar({ length: 256 }).notNull(),
     role: d.varchar({ length: 50 }).notNull().default("member"),
     joinedAt: d
       .timestamp({ withTimezone: true })
@@ -98,7 +98,7 @@ export const projectMembers = createTable(
   }),
   (t) => [
     index("project_members_project_id_idx").on(t.projectId),
-    index("project_members_user_id_idx").on(t.userId),
+    index("project_members_clerk_user_id_idx").on(t.clerkUserId),
   ],
 );
 
@@ -106,7 +106,7 @@ export const notifications = createTable(
   "notification",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    userId: d.integer().notNull().references(() => users.id, { onDelete: "cascade" }),
+    clerkUserId: d.varchar({ length: 256 }).notNull(),
     projectId: d.integer().references(() => projects.id, { onDelete: "cascade" }),
     type: d.varchar({ length: 100 }).notNull(),
     message: d.text().notNull(),
@@ -117,7 +117,7 @@ export const notifications = createTable(
       .notNull(),
   }),
   (t) => [
-    index("notifications_user_id_idx").on(t.userId),
+    index("notifications_clerk_user_id_idx").on(t.clerkUserId),
     index("is_read_idx").on(t.isRead),
   ],
 );
