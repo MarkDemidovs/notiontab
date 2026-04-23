@@ -11,16 +11,131 @@ import { index, pgTableCreator } from "drizzle-orm/pg-core";
  */
 export const createTable = pgTableCreator((name) => `wegotit_${name}`);
 
-export const posts = createTable(
-  "post",
+
+export const users = createTable(
+  "user",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    name: d.varchar({ length: 256 }),
+    email: d.varchar({ length: 256 }).notNull().unique(),
+    password: d.varchar({ length: 256 }).notNull(),
     createdAt: d
       .timestamp({ withTimezone: true })
       .$defaultFn(() => /* @__PURE__ */ new Date())
       .notNull(),
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
-  (t) => [index("name_idx").on(t.name)],
+  (t) => [index("email_idx").on(t.email)],
+);
+export const profiles = createTable(
+  "profile",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    userId: d.integer().notNull().references(() => users.id, { onDelete: "cascade" }),
+    fullName: d.varchar({ length: 256 }),
+    bio: d.text(),
+    avatarUrl: d.varchar({ length: 512 }),
+    createdAt: d
+      .timestamp({ withTimezone: true })
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+  }),
+  (t) => [index("user_id_idx").on(t.userId)],
+);
+
+export const projects = createTable(
+  "project",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    ownerId: d.integer().notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: d.varchar({ length: 256 }).notNull(),
+    description: d.text(),
+    createdAt: d
+      .timestamp({ withTimezone: true })
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+  }),
+  (t) => [
+    index("owner_id_idx").on(t.ownerId),
+    index("name_idx").on(t.name),
+  ],
+);
+
+export const projectRolesNeeded = createTable(
+  "project_role_needed",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    projectId: d.integer().notNull().references(() => projects.id, { onDelete: "cascade" }),
+    title: d.varchar({ length: 256 }).notNull(),
+    description: d.text(),
+    slotsNeeded: d.integer().notNull().default(1),
+    createdAt: d
+      .timestamp({ withTimezone: true })
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  }),
+  (t) => [index("project_id_idx").on(t.projectId)],
+);
+
+
+export const applications = createTable(
+  "application",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    userId: d.integer().notNull().references(() => users.id, { onDelete: "cascade" }),
+    projectRoleNeededId: d.integer().notNull().references(() => projectRolesNeeded.id, { onDelete: "cascade" }),
+    status: d.varchar({ length: 50 }).notNull().default("pending"),
+    message: d.text(),
+    createdAt: d
+      .timestamp({ withTimezone: true })
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+  }),
+  (t) => [
+    index("user_id_idx").on(t.userId),
+    index("project_role_needed_id_idx").on(t.projectRoleNeededId),
+    index("status_idx").on(t.status),
+  ],
+);
+ 
+
+export const projectMembers = createTable(
+  "project_member",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    projectId: d.integer().notNull().references(() => projects.id, { onDelete: "cascade" }),
+    userId: d.integer().notNull().references(() => users.id, { onDelete: "cascade" }),
+    role: d.varchar({ length: 50 }).notNull().default("member"),
+    joinedAt: d
+      .timestamp({ withTimezone: true })
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  }),
+  (t) => [
+    index("project_id_idx").on(t.projectId),
+    index("user_id_idx").on(t.userId),
+  ],
+);
+
+
+export const notifications = createTable(
+  "notification",
+  (d) => ({
+    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    userId: d.integer().notNull().references(() => users.id, { onDelete: "cascade" }),
+    projectId: d.integer().references(() => projects.id, { onDelete: "cascade" }),
+    type: d.varchar({ length: 100 }).notNull(),
+    message: d.text().notNull(),
+    isRead: d.boolean().notNull().default(false),
+    createdAt: d
+      .timestamp({ withTimezone: true })
+      .$defaultFn(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  }),
+  (t) => [
+    index("user_id_idx").on(t.userId),
+    index("is_read_idx").on(t.isRead),
+  ],
 );
