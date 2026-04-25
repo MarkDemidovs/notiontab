@@ -19,13 +19,20 @@ export const profiles = createTable(
     fullName: d.varchar({ length: 256 }),
     bio: d.text(),
     avatarUrl: d.varchar({ length: 512 }),
+    isPublic: d.boolean().notNull().default(true),
+    link1: d.varchar({ length: 512 }),
+    link2: d.varchar({ length: 512 }),
+    link3: d.varchar({ length: 512 }),
     createdAt: d
       .timestamp({ withTimezone: true })
       .$defaultFn(() => /* @__PURE__ */ new Date())
       .notNull(),
     updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
   }),
-  (t) => [index("clerk_user_id_idx").on(t.clerkUserId)],
+  (t) => [
+    index("profile_clerk_user_id_idx").on(t.clerkUserId),
+    index("is_public_idx").on(t.isPublic),
+  ],
 );
 
 export const projects = createTable(
