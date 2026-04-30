@@ -25,9 +25,11 @@ export async function POST(req: Request) {
   const body = JSON.stringify(payload);
 
   const wh = new Webhook(WEBHOOK_SECRET);
+
   let evt: { type: string; data: { id: string } };
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     evt = wh.verify(body, {
       "svix-id": svix_id,
       "svix-timestamp": svix_timestamp,

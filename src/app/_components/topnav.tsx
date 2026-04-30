@@ -1,7 +1,6 @@
 'use client';
 
-import { SignInButton, UserButton, Show } from "@clerk/nextjs";
-import ProfilePage from "../profile/page";
+import { SignInButton, Show } from "@clerk/nextjs";
 import Link from "next/link";
 
 export default function TopNav() {
