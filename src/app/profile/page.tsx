@@ -1,13 +1,9 @@
-import { UserButton } from "@clerk/nextjs";
+import ProfileForm from "./ProfileForm";
 
 export default function ProfilePage() {
-    return  (
-        <>
-        <div>Clerk Settings:</div>
-        <UserButton />
-        <hr></hr>
-        <div>Notiontab Settings:</div>
-        <button>TBA</button>
-        </>
-    )
+  return (
+    <main className="mx-auto max-w-4xl px-4 py-8">
+      <ProfileForm />
+    </main>
+  );
 }

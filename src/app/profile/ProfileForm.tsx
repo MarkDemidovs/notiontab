@@ -1,0 +1,189 @@
+"use client";
+
+import { useEffect, useState, type FormEvent } from "react";
+import { UserButton } from "@clerk/nextjs";
+
+interface ProfileData {
+  id: number;
+  clerkUserId: string;
+  fullName: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  isPublic: boolean;
+  link1: string | null;
+  link2: string | null;
+  link3: string | null;
+}
+
+export default function ProfileForm() {
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [fullName, setFullName] = useState("");
+  const [bio, setBio] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [isPublic, setIsPublic] = useState(true);
+  const [link1, setLink1] = useState("");
+  const [link2, setLink2] = useState("");
+  const [link3, setLink3] = useState("");
+
+  useEffect(() => {
+    void fetch("/api/profile")
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to load profile: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data: ProfileData) => {
+        setProfile(data);
+        setFullName(data.fullName ?? "");
+        setBio(data.bio ?? "");
+        setAvatarUrl(data.avatarUrl ?? "");
+        setIsPublic(data.isPublic ?? true);
+        setLink1(data.link1 ?? "");
+        setLink2(data.link2 ?? "");
+        setLink3(data.link3 ?? "");
+      })
+      .catch((err) => setError(String(err)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName,
+          bio,
+          avatarUrl,
+          isPublic,
+          link1,
+          link2,
+          link3,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Save failed: ${res.status}`);
+      }
+
+      const updated = await res.json();
+      setProfile(updated);
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <p>Loading profile…</p>;
+  }
+
+  return (
+    <div className="space-y-6 p-4 rounded-xl border border-slate-200 bg-white/80 text-slate-900 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Profile Settings</h1>
+          <p className="text-sm text-slate-600">Editable profile fields stored in your Notiontab profile.</p>
+        </div>
+        <UserButton />
+      </div>
+
+      {error ? <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block">
+            <span className="text-sm font-medium">Full name</span>
+            <input
+              className="mt-1 block w-full rounded-lg border px-3 py-2"
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              placeholder="Your display name"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-sm font-medium">Avatar URL</span>
+            <input
+              className="mt-1 block w-full rounded-lg border px-3 py-2"
+              value={avatarUrl}
+              onChange={(event) => setAvatarUrl(event.target.value)}
+              placeholder="https://..."
+            />
+          </label>
+        </div>
+
+        <label className="block">
+          <span className="text-sm font-medium">Bio</span>
+          <textarea
+            className="mt-1 block w-full rounded-lg border px-3 py-2"
+            value={bio}
+            onChange={(event) => setBio(event.target.value)}
+            rows={4}
+            placeholder="A short description about you"
+          />
+        </label>
+
+        <fieldset className="flex items-center gap-3">
+          <input
+            id="isPublic"
+            type="checkbox"
+            checked={isPublic}
+            onChange={(event) => setIsPublic(event.target.checked)}
+          />
+          <label htmlFor="isPublic" className="text-sm">
+            Public profile
+          </label>
+        </fieldset>
+
+        <div className="space-y-4">
+          <label className="block">
+            <span className="text-sm font-medium">Link 1</span>
+            <input
+              className="mt-1 block w-full rounded-lg border px-3 py-2"
+              value={link1}
+              onChange={(event) => setLink1(event.target.value)}
+              placeholder="https://..."
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium">Link 2</span>
+            <input
+              className="mt-1 block w-full rounded-lg border px-3 py-2"
+              value={link2}
+              onChange={(event) => setLink2(event.target.value)}
+              placeholder="https://..."
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium">Link 3</span>
+            <input
+              className="mt-1 block w-full rounded-lg border px-3 py-2"
+              value={link3}
+              onChange={(event) => setLink3(event.target.value)}
+              placeholder="https://..."
+            />
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          disabled={saving}
+          className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+        >
+          {saving ? "Saving..." : "Save changes"}
+        </button>
+      </form>
+    </div>
+  );
+}
