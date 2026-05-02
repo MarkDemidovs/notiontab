@@ -41,6 +41,20 @@ export async function GET() {
   return NextResponse.json(profile);
 }
 
+type ProfileUpdateRequest = {
+  fullName?: string | null;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  isPublic?: boolean;
+  link1?: string | null;
+  link2?: string | null;
+  link3?: string | null;
+};
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 export async function PATCH(req: Request) {
   const { userId } = await auth();
   if (!userId) {
@@ -48,14 +62,28 @@ export async function PATCH(req: Request) {
   }
 
   const body = await req.json();
-  const updateData = {
-    fullName: body.fullName ?? null,
-    bio: body.bio ?? null,
-    avatarUrl: body.avatarUrl ?? null,
+  if (!isObject(body)) {
+    return new NextResponse("Invalid request body", { status: 400 });
+  }
+
+  const parsedBody: ProfileUpdateRequest = {
+    fullName: typeof body.fullName === "string" ? body.fullName : null,
+    bio: typeof body.bio === "string" ? body.bio : null,
+    avatarUrl: typeof body.avatarUrl === "string" ? body.avatarUrl : null,
     isPublic: typeof body.isPublic === "boolean" ? body.isPublic : true,
-    link1: body.link1 ?? null,
-    link2: body.link2 ?? null,
-    link3: body.link3 ?? null,
+    link1: typeof body.link1 === "string" ? body.link1 : null,
+    link2: typeof body.link2 === "string" ? body.link2 : null,
+    link3: typeof body.link3 === "string" ? body.link3 : null,
+  };
+
+  const updateData = {
+    fullName: parsedBody.fullName,
+    bio: parsedBody.bio,
+    avatarUrl: parsedBody.avatarUrl,
+    isPublic: parsedBody.isPublic,
+    link1: parsedBody.link1,
+    link2: parsedBody.link2,
+    link3: parsedBody.link3,
   };
 
   const result = await db.update(profiles)

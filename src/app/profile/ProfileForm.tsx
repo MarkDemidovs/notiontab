@@ -16,7 +16,6 @@ interface ProfileData {
 }
 
 export default function ProfileForm() {
-  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,15 +29,14 @@ export default function ProfileForm() {
   const [link3, setLink3] = useState("");
 
   useEffect(() => {
-    void fetch("/api/profile")
-      .then(async (res) => {
+    const loadProfile = async () => {
+      try {
+        const res = await fetch("/api/profile");
         if (!res.ok) {
           throw new Error(`Failed to load profile: ${res.status}`);
         }
-        return res.json();
-      })
-      .then((data: ProfileData) => {
-        setProfile(data);
+
+        const data = (await res.json()) as ProfileData;
         setFullName(data.fullName ?? "");
         setBio(data.bio ?? "");
         setAvatarUrl(data.avatarUrl ?? "");
@@ -46,9 +44,14 @@ export default function ProfileForm() {
         setLink1(data.link1 ?? "");
         setLink2(data.link2 ?? "");
         setLink3(data.link3 ?? "");
-      })
-      .catch((err) => setError(String(err)))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        setError(String(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadProfile();
   }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -75,8 +78,7 @@ export default function ProfileForm() {
         throw new Error(`Save failed: ${res.status}`);
       }
 
-      const updated = await res.json();
-      setProfile(updated);
+      await res.json() as ProfileData;
     } catch (err) {
       setError(String(err));
     } finally {
