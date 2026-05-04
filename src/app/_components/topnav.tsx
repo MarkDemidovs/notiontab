@@ -1,6 +1,6 @@
 'use client';
 
-import { SignInButton, Show } from "@clerk/nextjs";
+import { SignInButton, Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 export default function TopNav() {
@@ -24,11 +24,7 @@ export default function TopNav() {
           </Show>
 
           <Show when="signed-in">
-            <Link href="/profile">
-              <button className="rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-slate-500 hover:bg-slate-800">
-                Profile Settings
-              </button>
-            </Link>
+            <UserButton />
           </Show>
         </div>
       </div>
