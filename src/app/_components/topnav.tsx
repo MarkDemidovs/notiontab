@@ -24,7 +24,7 @@ export default function TopNav() {
           </Show>
 
           <Show when="signed-in">
-            <UserButton />
+            <UserButton userProfileUrl="/profile" />
           </Show>
         </div>
       </div>
