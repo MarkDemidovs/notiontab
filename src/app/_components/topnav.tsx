@@ -15,6 +15,14 @@ export default function TopNav() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <Show when="signed-in">
+            <Link href="/?create=true" className="rounded-full border border-slate-700 bg-slate-900/80 p-2 text-slate-100 transition hover:border-slate-500 hover:bg-slate-800">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </Link>
+          </Show>
+
           <Show when="signed-out">
             <SignInButton>
               <button className="rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-slate-500 hover:bg-slate-800">

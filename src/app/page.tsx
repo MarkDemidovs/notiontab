@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import CreateProjectModal from "./CreateProjectModal";
 
 interface Project {
   id: number;
@@ -14,6 +16,8 @@ interface Project {
 export default function HomePage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     void fetch("/api/projects")
@@ -22,34 +26,42 @@ export default function HomePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Inside your HomePage component
-  const createProject = async () => {
-    const response = await fetch("/api/projects", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: "My New Project",
-        description: "Optional description",
-      }),
-    });
-
-    if (response.ok) {
-      const newProject = await response.json();
-      setProjects((prev) => [...prev, newProject]);
-    } else {
-      const errorData = await response.json();
-      console.error("Failed to create project:", errorData.error);
+  useEffect(() => {
+    if (searchParams.get("create") === "true") {
+      setIsModalOpen(true);
     }
+  }, [searchParams]);
+
+  const handleProjectCreated = (newProject: Project) => {
+    setProjects((prev) => [...prev, newProject]);
   };
 
-
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    // Clean up the URL
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("create");
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
       <div>notiontab</div>
       {loading ? <p>Loading...</p> : <p>{projects.length} projects</p>}
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+      >
+        + Create Project
+      </button>
+
+      <CreateProjectModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onProjectCreated={handleProjectCreated}
+      />
     </main>
   );
 }
