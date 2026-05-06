@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import CreateProjectModal from "./CreateProjectModal";
 
 interface Project {
@@ -17,7 +16,6 @@ export default function HomePage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     void fetch("/api/projects")
@@ -27,10 +25,11 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get("create") === "true") {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("create") === "true") {
       setIsModalOpen(true);
     }
-  }, [searchParams]);
+  }, []);
 
   const handleProjectCreated = (newProject: Project) => {
     setProjects((prev) => [...prev, newProject]);
