@@ -41,11 +41,11 @@ export default function CreateProjectModal({ isOpen, onClose, onProjectCreated }
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create project");
+        const errorData = (await response.json()) as { error?: string };
+        throw new Error(errorData.error ?? "Failed to create project");
       }
 
-      const newProject = await response.json();
+      const newProject = (await response.json()) as Project;
       onProjectCreated(newProject);
       setName("");
       setDescription("");
