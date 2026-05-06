@@ -29,6 +29,13 @@ export default function HomePage() {
     if (params.get("create") === "true") {
       setIsModalOpen(true);
     }
+
+    const handleOpenModal = () => setIsModalOpen(true);
+    window.addEventListener("openCreateProjectModal", handleOpenModal);
+
+    return () => {
+      window.removeEventListener("openCreateProjectModal", handleOpenModal);
+    };
   }, []);
 
   const handleProjectCreated = (newProject: Project) => {

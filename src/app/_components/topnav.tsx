@@ -2,8 +2,20 @@
 
 import { SignInButton, Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function TopNav() {
+  const router = useRouter();
+
+  const handleCreateClick = () => {
+    if (window.location.pathname === "/") {
+      window.dispatchEvent(new Event("openCreateProjectModal"));
+      window.history.pushState({}, "", "/?create=true");
+    } else {
+      router.push("/?create=true");
+    }
+  };
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-slate-800 bg-slate-950/90 px-4 py-3 shadow-lg shadow-slate-950/20 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 text-slate-100">
@@ -16,11 +28,15 @@ export default function TopNav() {
 
         <div className="flex items-center gap-3">
           <Show when="signed-in">
-            <Link href="/?create=true" className="rounded-full border border-slate-700 bg-slate-900/80 p-2 text-slate-100 transition hover:border-slate-500 hover:bg-slate-800">
+            <button
+              type="button"
+              onClick={handleCreateClick}
+              className="rounded-full border border-slate-700 bg-slate-900/80 p-2 text-slate-100 transition hover:border-slate-500 hover:bg-slate-800"
+            >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-            </Link>
+            </button>
           </Show>
 
           <Show when="signed-out">
