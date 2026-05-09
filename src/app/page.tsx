@@ -55,11 +55,19 @@ export default function HomePage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-      <div className="space-y-6">
-        <div>notiontab</div>
-        
-        <div className="flex items-center gap-4">
+    <main className="min-h-screen bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="text-3xl font-bold">notiontab</h1>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+          >
+            + Create Project
+          </button>
+        </div>
+
+        <div className="mb-8 flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className={isPublicMode ? "text-white" : "text-slate-400"}>Public</span>
             <button
@@ -78,13 +86,37 @@ export default function HomePage() {
           </div>
         </div>
 
-        {loading ? <p>Loading...</p> : <p>{projects.length} projects</p>}
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
-        >
-          + Create Project
-        </button>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <p>Loading projects...</p>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-slate-400">No projects found</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project) => (
+              <div
+                key={project.id}
+                className="flex flex-col rounded-lg border border-slate-700 bg-slate-900/50 p-6 hover:border-slate-600 hover:bg-slate-900/70 transition-all cursor-pointer"
+              >
+                <h2 className="mb-2 text-lg font-semibold text-white">{project.name}</h2>
+                {project.description && (
+                  <p className="mb-4 flex-1 text-sm text-slate-300">{project.description}</p>
+                )}
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <span className={`rounded px-2 py-1 ${project.isPublic ? "bg-slate-700" : "bg-slate-800"}`}>
+                    {project.isPublic ? "Public" : "Private"}
+                  </span>
+                  <span className="text-slate-500">
+                    {new Date(project.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <CreateProjectModal
