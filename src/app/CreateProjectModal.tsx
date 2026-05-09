@@ -13,6 +13,7 @@ interface Project {
   clerkUserId: string;
   name: string;
   description: string | null;
+  isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

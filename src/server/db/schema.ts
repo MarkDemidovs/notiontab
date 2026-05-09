@@ -42,6 +42,7 @@ export const projects = createTable(
     clerkUserId: d.varchar({ length: 256 }).notNull(),
     name: d.varchar({ length: 256 }).notNull(),
     description: d.text(),
+    isPublic: d.boolean().notNull().default(true),
     createdAt: d
       .timestamp({ withTimezone: true })
       .$defaultFn(() => /* @__PURE__ */ new Date())
@@ -51,6 +52,7 @@ export const projects = createTable(
   (t) => [
     index("projects_clerk_user_id_idx").on(t.clerkUserId),
     index("name_idx").on(t.name),
+    index("projects_is_public_idx").on(t.isPublic),
   ],
 );
 

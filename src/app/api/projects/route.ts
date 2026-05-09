@@ -1,19 +1,34 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
 import { projects } from "~/server/db/schema";
+import { eq, or } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(request: Request) {
   const { userId } = await auth();
   if (!userId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
+    const url = new URL(request.url);
+    const mode = url.searchParams.get("mode") ?? "public";
+
     console.log("DATABASE_URL:", process.env.DATABASE_URL ? "set" : "not set");
-    const projects = await db.query.projects.findMany({
-      where: (p, { eq }) => eq(p.clerkUserId, userId),
-    });
-    return Response.json(projects);
+    
+    let projectsData;
+    if (mode === "own") {
+      // Only user's own projects
+      projectsData = await db.query.projects.findMany({
+        where: (p) => eq(p.clerkUserId, userId),
+      });
+    } else {
+      // Public projects + user's own projects
+      projectsData = await db.query.projects.findMany({
+        where: (p) => or(eq(p.isPublic, true), eq(p.clerkUserId, userId)),
+      });
+    }
+    
+    return Response.json(projectsData);
   } catch (error) {
     console.error("Full error:", error);
     return Response.json(
