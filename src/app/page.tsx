@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { SignInButton } from "@clerk/nextjs";
 import CreateProjectModal from "./CreateProjectModal";
 
 interface Project {
@@ -14,10 +16,12 @@ interface Project {
 }
 
 export default function HomePage() {
+  const { isSignedIn, isLoaded } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPublicMode, setIsPublicMode] = useState(true);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
 
   useEffect(() => {
     void fetch(`/api/projects?mode=${isPublicMode ? "public" : "own"}`)
@@ -54,6 +58,19 @@ export default function HomePage() {
     }
   };
 
+  const handleToggleMode = () => {
+    if (!isPublicMode) {
+      // Already in own mode, switch to public
+      setIsPublicMode(true);
+    } else if (!isSignedIn && isLoaded) {
+      // Trying to switch to own mode but not signed in
+      setShowSignInPrompt(true);
+    } else {
+      // Signed in, switch to own mode
+      setIsPublicMode(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
       <div className="mx-auto max-w-7xl px-4 py-8">
@@ -71,7 +88,7 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <span className={isPublicMode ? "text-white" : "text-slate-400"}>Public</span>
             <button
-              onClick={() => setIsPublicMode(!isPublicMode)}
+              onClick={handleToggleMode}
               className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
                 isPublicMode ? "bg-slate-600" : "bg-slate-700"
               }`}
@@ -118,6 +135,31 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Sign-in prompt modal */}
+      {showSignInPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 max-w-sm rounded-lg border border-slate-700 bg-slate-900 p-6 text-white">
+            <h2 className="mb-4 text-xl font-semibold">Sign In Required</h2>
+            <p className="mb-6 text-slate-300">
+              This requires an account and additional info to view your personal projects.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowSignInPrompt(false)}
+                className="flex-1 rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition"
+              >
+                Cancel
+              </button>
+              <SignInButton>
+                <button className="flex-1 rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600 transition">
+                  Sign In
+                </button>
+              </SignInButton>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CreateProjectModal
         isOpen={isModalOpen}

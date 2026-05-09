@@ -5,9 +5,6 @@ import { eq, or } from "drizzle-orm";
 
 export async function GET(request: Request) {
   const { userId } = await auth();
-  if (!userId) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   try {
     const url = new URL(request.url);
@@ -17,15 +14,24 @@ export async function GET(request: Request) {
     
     let projectsData;
     if (mode === "own") {
+      if (!userId) {
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
+      }
       // Only user's own projects
       projectsData = await db.query.projects.findMany({
         where: (p) => eq(p.clerkUserId, userId),
       });
     } else {
-      // Public projects + user's own projects
-      projectsData = await db.query.projects.findMany({
-        where: (p) => or(eq(p.isPublic, true), eq(p.clerkUserId, userId)),
-      });
+      // Public projects + user's own projects (if authenticated)
+      if (userId) {
+        projectsData = await db.query.projects.findMany({
+          where: (p) => or(eq(p.isPublic, true), eq(p.clerkUserId, userId)),
+        });
+      } else {
+        projectsData = await db.query.projects.findMany({
+          where: (p) => eq(p.isPublic, true),
+        });
+      }
     }
     
     return Response.json(projectsData);
