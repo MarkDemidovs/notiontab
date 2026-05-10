@@ -14,6 +14,7 @@ interface Project {
   isPublic: boolean;
   createdAt: Date;
   updatedAt: Date;
+  rolesNeededCount?: number;
 }
 
 export default function HomePage() {
@@ -196,10 +197,19 @@ export default function HomePage() {
                     ) : (
                       <p className="mt-4 text-sm leading-7 text-slate-500">No description provided.</p>
                     )}
-                    <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-                      <span>{new Date(project.createdAt).toLocaleDateString()}</span>
-                      <span className="h-1 w-1 rounded-full bg-slate-300" />
-                      <span>{project.userFullName ?? project.clerkUserId}</span>
+                    <div className="mt-6 grid gap-3 text-sm text-slate-500 sm:grid-cols-[auto_auto]">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span>{new Date(project.createdAt).toLocaleDateString()}</span>
+                        <span className="h-1 w-1 rounded-full bg-slate-300" />
+                        <span>{project.userFullName ?? project.clerkUserId}</span>
+                      </div>
+                      {project.rolesNeededCount ? (
+                        <div className="flex items-center justify-start sm:justify-end">
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+                            {project.rolesNeededCount} role{project.rolesNeededCount > 1 ? "s" : ""} needed
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                   </article>
                 ))}

@@ -1,7 +1,13 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
-import { projects, profiles } from "~/server/db/schema";
+import { projects, profiles, projectRolesNeeded } from "~/server/db/schema";
 import { eq, or } from "drizzle-orm";
+
+type RolePayload = {
+  title: string;
+  description?: string | null;
+  slotsNeeded?: number | string;
+};
 
 export async function GET(request: Request) {
   const { userId } = await auth();
@@ -58,8 +64,17 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
-    const { name, description } = body;
+    const body = (await request.json()) as {
+      name?: unknown;
+      description?: unknown;
+      isPublic?: unknown;
+      rolesNeeded?: unknown;
+    };
+
+    const name = typeof body.name === "string" ? body.name : undefined;
+    const description = typeof body.description === "string" ? body.description : null;
+    const isPublic = Boolean(body.isPublic);
+    const rolesNeeded = body.rolesNeeded;
 
     if (!name) {
       return Response.json({ error: "Name is required" }, { status: 400 });
@@ -69,7 +84,37 @@ export async function POST(request: Request) {
       clerkUserId: userId,
       name,
       description,
+      isPublic,
     }).returning();
+
+    if (!newProject) {
+      return Response.json({ error: "Failed to create project" }, { status: 500 });
+    }
+
+    const filteredRoles = Array.isArray(rolesNeeded)
+      ? rolesNeeded.filter((role): role is RolePayload => {
+          if (typeof role !== "object" || role === null) {
+            return false;
+          }
+
+          const maybeRole = role as Record<string, unknown>;
+          return (
+            typeof maybeRole.title === "string" &&
+            maybeRole.title.trim().length > 0
+          );
+        })
+      : [];
+
+    if (filteredRoles.length > 0) {
+      await db.insert(projectRolesNeeded).values(
+        filteredRoles.map((role) => ({
+          projectId: newProject.id,
+          title: role.title.trim(),
+          description: role.description?.trim() ?? null,
+          slotsNeeded: Math.max(1, Number(role.slotsNeeded) || 1),
+        }))
+      );
+    }
 
     const [profile] = await db
       .select({ fullName: profiles.fullName })
@@ -79,6 +124,7 @@ export async function POST(request: Request) {
     return Response.json({
       ...newProject,
       userFullName: profile?.fullName ?? null,
+      rolesNeededCount: filteredRoles.length,
     }, { status: 201 });
   } catch (error) {
     console.error("Full error:", error);
