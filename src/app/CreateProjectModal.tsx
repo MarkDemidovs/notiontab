@@ -11,6 +11,7 @@ interface CreateProjectModalProps {
 interface Project {
   id: number;
   clerkUserId: string;
+  userFullName: string | null;
   name: string;
   description: string | null;
   isPublic: boolean;

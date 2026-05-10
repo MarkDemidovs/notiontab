@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
-import { projects } from "~/server/db/schema";
+import { projects, profiles } from "~/server/db/schema";
 import { eq, or } from "drizzle-orm";
 
 export async function GET(request: Request) {
@@ -12,26 +12,30 @@ export async function GET(request: Request) {
 
     console.log("DATABASE_URL:", process.env.DATABASE_URL ? "set" : "not set");
     
+    const baseQuery = db
+      .select({
+        id: projects.id,
+        clerkUserId: projects.clerkUserId,
+        name: projects.name,
+        description: projects.description,
+        isPublic: projects.isPublic,
+        createdAt: projects.createdAt,
+        updatedAt: projects.updatedAt,
+        userFullName: profiles.fullName,
+      })
+      .from(projects)
+      .leftJoin(profiles, eq(projects.clerkUserId, profiles.clerkUserId));
+
     let projectsData;
     if (mode === "own") {
       if (!userId) {
         return Response.json({ error: "Unauthorized" }, { status: 401 });
       }
-      // Only user's own projects
-      projectsData = await db.query.projects.findMany({
-        where: (p) => eq(p.clerkUserId, userId),
-      });
+      projectsData = await baseQuery.where(() => eq(projects.clerkUserId, userId));
+    } else if (userId) {
+      projectsData = await baseQuery.where(() => or(eq(projects.isPublic, true), eq(projects.clerkUserId, userId)));
     } else {
-      // Public projects + user's own projects (if authenticated)
-      if (userId) {
-        projectsData = await db.query.projects.findMany({
-          where: (p) => or(eq(p.isPublic, true), eq(p.clerkUserId, userId)),
-        });
-      } else {
-        projectsData = await db.query.projects.findMany({
-          where: (p) => eq(p.isPublic, true),
-        });
-      }
+      projectsData = await baseQuery.where(() => eq(projects.isPublic, true));
     }
     
     return Response.json(projectsData);
@@ -67,7 +71,15 @@ export async function POST(request: Request) {
       description,
     }).returning();
 
-    return Response.json(newProject, { status: 201 });
+    const [profile] = await db
+      .select({ fullName: profiles.fullName })
+      .from(profiles)
+      .where(eq(profiles.clerkUserId, userId));
+
+    return Response.json({
+      ...newProject,
+      userFullName: profile?.fullName ?? null,
+    }, { status: 201 });
   } catch (error) {
     console.error("Full error:", error);
     return Response.json(
