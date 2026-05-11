@@ -51,6 +51,7 @@ export async function POST(req: Request) {
         bio: null,
         avatarUrl: null,
         isPublic: true,
+        skills: [],
       }).onConflictDoNothing({
         target: profiles.clerkUserId,
       });

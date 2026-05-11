@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { UserButton } from "@clerk/nextjs";
+import skillsConfig from "~/data/skills.json";
 
 interface ProfileData {
   id: number;
@@ -10,6 +11,7 @@ interface ProfileData {
   bio: string | null;
   avatarUrl: string | null;
   isPublic: boolean;
+  skills: string[];
   link1: string | null;
   link2: string | null;
   link3: string | null;
@@ -24,6 +26,8 @@ export default function ProfileForm() {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isPublic, setIsPublic] = useState(true);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [expanded, setExpanded] = useState(false);
   const [link1, setLink1] = useState("");
   const [link2, setLink2] = useState("");
   const [link3, setLink3] = useState("");
@@ -41,6 +45,7 @@ export default function ProfileForm() {
         setBio(data.bio ?? "");
         setAvatarUrl(data.avatarUrl ?? "");
         setIsPublic(data.isPublic ?? true);
+        setSkills(Array.isArray(data.skills) ? data.skills.filter((skill): skill is string => typeof skill === "string").slice(0, 15) : []);
         setLink1(data.link1 ?? "");
         setLink2(data.link2 ?? "");
         setLink3(data.link3 ?? "");
@@ -68,6 +73,7 @@ export default function ProfileForm() {
           bio,
           avatarUrl,
           isPublic,
+          skills,
           link1,
           link2,
           link3,
@@ -147,6 +153,65 @@ export default function ProfileForm() {
             Public profile
           </label>
         </fieldset>
+
+        <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Profile skills</p>
+              <p className="text-xs text-slate-500">Pick from shared skill roles. One of each, up to 15.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-600">{skills.length}/15</span>
+              <button
+                type="button"
+                onClick={() => setExpanded(!expanded)}
+                className="text-xs text-slate-500 hover:text-slate-700 underline"
+              >
+                {expanded ? "Collapse" : "Expand"}
+              </button>
+            </div>
+          </div>
+
+          {expanded && (
+            <div className="grid gap-2 grid-cols-3">
+              {skillsConfig.map((skill) => {
+                const isSelected = skills.includes(skill.name);
+                const disabled = !isSelected && skills.length >= 15;
+
+                return (
+                  <button
+                    key={skill.name}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        setSkills(skills.filter((name) => name !== skill.name));
+                        return;
+                      }
+                      if (skills.length < 15) {
+                        setSkills([...skills, skill.name]);
+                      }
+                    }}
+                    disabled={disabled}
+                    className={`inline-flex items-center justify-center rounded-full border transition ${
+                      isSelected ? "bg-white shadow-sm font-bold border-2" : "bg-white"
+                    } ${disabled ? "cursor-not-allowed opacity-50" : "hover:bg-slate-100"} h-10 px-4 text-sm font-medium`}
+                    style={{
+                      borderColor: skill.color,
+                      color: skill.color,
+                      backgroundColor: "#ffffff",
+                    }}
+                  >
+                    {skill.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {skills.length >= 15 ? (
+            <p className="text-sm text-rose-600">Max 15 skills selected. Remove one to add another.</p>
+          ) : null}
+        </div>
 
         <div className="space-y-4">
           <label className="block">

@@ -1,0 +1,12 @@
+[
+  { "name": "Frontend Engineering", "color": "#0ea5e9" },
+  { "name": "Backend Engineering", "color": "#22c55e" },
+  { "name": "Product Management", "color": "#f97316" },
+  { "name": "Design", "color": "#e11d48" },
+  { "name": "Data Science", "color": "#8b5cf6" },
+  { "name": "DevOps", "color": "#14b8a6" },
+  { "name": "Growth Marketing", "color": "#facc15" },
+  { "name": "UX Research", "color": "#3b82f6" },
+  { "name": "AI/ML", "color": "#6366f1" },
+  { "name": "Quality Assurance", "color": "#f43f5e" }
+]

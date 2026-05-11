@@ -23,6 +23,7 @@ export const profiles = createTable(
     link1: d.varchar({ length: 512 }),
     link2: d.varchar({ length: 512 }),
     link3: d.varchar({ length: 512 }),
+    skills: d.json("jsonb").notNull().default([]),
     createdAt: d
       .timestamp({ withTimezone: true })
       .$defaultFn(() => /* @__PURE__ */ new Date())
