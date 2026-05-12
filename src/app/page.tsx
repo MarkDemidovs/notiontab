@@ -12,6 +12,7 @@ interface Project {
   name: string;
   description: string | null;
   isPublic: boolean;
+  tags: string[];
   createdAt: Date;
   updatedAt: Date;
   rolesNeededCount?: number;
@@ -196,6 +197,18 @@ export default function HomePage() {
                       <p className="mt-4 text-sm leading-7 text-slate-600">{project.description}</p>
                     ) : (
                       <p className="mt-4 text-sm leading-7 text-slate-500">No description provided.</p>
+                    )}
+                    {project.tags && project.tags.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {project.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     )}
                     <div className="mt-6 grid gap-3 text-sm text-slate-500 sm:grid-cols-[auto_auto]">
                       <div className="flex flex-wrap items-center gap-3">

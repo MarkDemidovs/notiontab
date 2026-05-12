@@ -173,44 +173,46 @@ export default function ProfileForm() {
           </div>
 
           {expanded && (
-            <div className="grid gap-2 grid-cols-3">
-              {skillsConfig.map((skill) => {
-                const isSelected = skills.includes(skill.name);
-                const disabled = !isSelected && skills.length >= 15;
+            <div className="overflow-hidden transition-all duration-300 ease-in-out">
+              <div className="grid gap-2 grid-cols-3 pt-4">
+                {skillsConfig.map((skill) => {
+                  const isSelected = skills.includes(skill.name);
+                  const disabled = !isSelected && skills.length >= 15;
 
-                return (
-                  <button
-                    key={skill.name}
-                    type="button"
-                    onClick={() => {
-                      if (isSelected) {
-                        setSkills(skills.filter((name) => name !== skill.name));
-                        return;
-                      }
-                      if (skills.length < 15) {
-                        setSkills([...skills, skill.name]);
-                      }
-                    }}
-                    disabled={disabled}
-                    className={`inline-flex items-center justify-center rounded-full border transition ${
-                      isSelected ? "bg-white shadow-sm font-bold border-2" : "bg-white"
-                    } ${disabled ? "cursor-not-allowed opacity-50" : "hover:bg-slate-100"} h-10 px-4 text-sm font-medium`}
-                    style={{
-                      borderColor: skill.color,
-                      color: skill.color,
-                      backgroundColor: "#ffffff",
-                    }}
-                  >
-                    {skill.name}
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={skill.name}
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          setSkills(skills.filter((name) => name !== skill.name));
+                          return;
+                        }
+                        if (skills.length < 15) {
+                          setSkills([...skills, skill.name]);
+                        }
+                      }}
+                      disabled={disabled}
+                      className={`inline-flex items-center justify-center rounded-full border transition ${
+                        isSelected ? "bg-white shadow-sm font-bold border-2" : "bg-white"
+                      } ${disabled ? "cursor-not-allowed opacity-50" : "hover:bg-slate-100"} h-10 px-4 text-sm font-medium`}
+                      style={{
+                        borderColor: skill.color,
+                        color: skill.color,
+                        backgroundColor: "#ffffff",
+                      }}
+                    >
+                      {skill.name}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {skills.length >= 15 ? (
+                <p className="mt-4 text-sm text-rose-600">Max 15 skills selected. Remove one to add another.</p>
+              ) : null}
             </div>
           )}
-
-          {skills.length >= 15 ? (
-            <p className="text-sm text-rose-600">Max 15 skills selected. Remove one to add another.</p>
-          ) : null}
         </div>
 
         <div className="space-y-4">

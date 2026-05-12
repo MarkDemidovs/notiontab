@@ -25,6 +25,7 @@ export async function GET(request: Request) {
         name: projects.name,
         description: projects.description,
         isPublic: projects.isPublic,
+        tags: projects.tags,
         createdAt: projects.createdAt,
         updatedAt: projects.updatedAt,
         userFullName: profiles.fullName,
@@ -68,12 +69,15 @@ export async function POST(request: Request) {
       name?: unknown;
       description?: unknown;
       isPublic?: unknown;
+      tags?: unknown;
       rolesNeeded?: unknown;
     };
 
     const name = typeof body.name === "string" ? body.name : undefined;
     const description = typeof body.description === "string" ? body.description : null;
     const isPublic = Boolean(body.isPublic);
+    const rawTags = Array.isArray(body.tags) ? body.tags : [];
+    const tags = rawTags.filter((tag): tag is string => typeof tag === "string").slice(0, 3);
     const rolesNeeded = body.rolesNeeded;
 
     if (!name) {
@@ -85,6 +89,7 @@ export async function POST(request: Request) {
       name,
       description,
       isPublic,
+      tags,
     }).returning();
 
     if (!newProject) {
