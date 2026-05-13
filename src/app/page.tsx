@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { SignInButton } from "@clerk/nextjs";
 import CreateProjectModal from "./CreateProjectModal";
+import ViewProjectModal from "./ViewProjectModal";
 
 interface Project {
   id: number;
@@ -25,6 +26,8 @@ export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPublicMode, setIsPublicMode] = useState(true);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   useEffect(() => {
     void fetch(`/api/projects?mode=${isPublicMode ? "public" : "own"}`)
@@ -182,7 +185,11 @@ export default function HomePage() {
                 {projects.map((project) => (
                   <article
                     key={project.id}
-                    className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 transition hover:border-slate-300"
+                    onClick={() => {
+                      setSelectedProject(project);
+                      setIsViewModalOpen(true);
+                    }}
+                    className="cursor-pointer rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 transition hover:border-slate-300"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
@@ -194,7 +201,7 @@ export default function HomePage() {
                       </span>
                     </div>
                     {project.description ? (
-                      <p className="mt-4 text-sm leading-7 text-slate-600">{project.description}</p>
+                      <p className="mt-4 text-sm leading-7 text-slate-600 line-clamp-3">{project.description}</p>
                     ) : (
                       <p className="mt-4 text-sm leading-7 text-slate-500">No description provided.</p>
                     )}
@@ -287,6 +294,12 @@ export default function HomePage() {
         isOpen={isModalOpen}
         onClose={handleModalClose}
         onProjectCreated={handleProjectCreated}
+      />
+
+      <ViewProjectModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        project={selectedProject}
       />
     </main>
   );
