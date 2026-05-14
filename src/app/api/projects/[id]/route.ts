@@ -3,12 +3,13 @@ import { db } from "~/server/db";
 import { projects, profiles, projectRolesNeeded } from "~/server/db/schema";
 import { eq, or, sql } from "drizzle-orm";
 
-export async function GET(request: Request, context: { params: { id: string } }) {
-  const { params } = context;
+export async function GET(request: Request) {
   const { userId } = await auth();
 
   try {
-    const projectId = parseInt(params.id);
+    const url = new URL(request.url);
+    const pathSegments = url.pathname.split("/").filter(Boolean);
+    const projectId = parseInt(pathSegments[pathSegments.length - 1] ?? "");
     if (isNaN(projectId)) {
       return Response.json({ error: "Invalid project ID" }, { status: 400 });
     }
