@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
 import { projects, profiles, projectRolesNeeded } from "~/server/db/schema";
-import { eq, or } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 
 type RolePayload = {
   title: string;
@@ -29,20 +29,22 @@ export async function GET(request: Request) {
         createdAt: projects.createdAt,
         updatedAt: projects.updatedAt,
         userFullName: profiles.fullName,
+        rolesNeededCount: sql<number>`count(${projectRolesNeeded.id})`,
       })
       .from(projects)
-      .leftJoin(profiles, eq(projects.clerkUserId, profiles.clerkUserId));
+      .leftJoin(profiles, eq(projects.clerkUserId, profiles.clerkUserId))
+      .leftJoin(projectRolesNeeded, eq(projects.id, projectRolesNeeded.projectId));
 
     let projectsData;
     if (mode === "own") {
       if (!userId) {
         return Response.json({ error: "Unauthorized" }, { status: 401 });
       }
-      projectsData = await baseQuery.where(() => eq(projects.clerkUserId, userId));
+      projectsData = await baseQuery.where(() => eq(projects.clerkUserId, userId)).groupBy(projects.id, profiles.fullName);
     } else if (userId) {
-      projectsData = await baseQuery.where(() => or(eq(projects.isPublic, true), eq(projects.clerkUserId, userId)));
+      projectsData = await baseQuery.where(() => or(eq(projects.isPublic, true), eq(projects.clerkUserId, userId))).groupBy(projects.id, profiles.fullName);
     } else {
-      projectsData = await baseQuery.where(() => eq(projects.isPublic, true));
+      projectsData = await baseQuery.where(() => eq(projects.isPublic, true)).groupBy(projects.id, profiles.fullName);
     }
     
     return Response.json(projectsData);

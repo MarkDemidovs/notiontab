@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { SignInButton } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
 import CreateProjectModal from "./CreateProjectModal";
 import ViewProjectModal from "./ViewProjectModal";
 
@@ -21,6 +22,7 @@ interface Project {
 
 export default function HomePage() {
   const { isSignedIn, isLoaded } = useAuth();
+  const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,6 +52,28 @@ export default function HomePage() {
     };
   }, []);
 
+  useEffect(() => {
+    const projectId = searchParams.get("project");
+    if (projectId && projects.length > 0) {
+      const project = projects.find(p => p.id === parseInt(projectId));
+      if (project) {
+        setSelectedProject(project);
+        setIsViewModalOpen(true);
+      } else {
+        // Fetch the specific project if not in the list
+        void fetch(`/api/projects/${projectId}`)
+          .then((res) => res.json())
+          .then((project: Project) => {
+            setSelectedProject(project);
+            setIsViewModalOpen(true);
+          })
+          .catch(() => {
+            // Project not found or not accessible
+          });
+      }
+    }
+  }, [searchParams, projects]);
+
   const handleProjectCreated = (newProject: Project) => {
     setProjects((prev) => [...prev, newProject]);
   };
@@ -60,6 +84,17 @@ export default function HomePage() {
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.delete("create");
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
+
+  const handleViewModalClose = () => {
+    setIsViewModalOpen(false);
+    setSelectedProject(null);
+    // Clean up the URL
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("project");
       window.history.replaceState({}, "", url.toString());
     }
   };
@@ -188,6 +223,9 @@ export default function HomePage() {
                     onClick={() => {
                       setSelectedProject(project);
                       setIsViewModalOpen(true);
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("project", project.id.toString());
+                      window.history.pushState({}, "", url.toString());
                     }}
                     className="cursor-pointer rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 transition hover:border-slate-300"
                   >
@@ -196,9 +234,26 @@ export default function HomePage() {
                         <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Project</p>
                         <h3 className="mt-2 text-xl font-semibold text-slate-900">{project.name}</h3>
                       </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${project.isPublic ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700"}`}>
-                        {project.isPublic ? "Public" : "Private"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const url = new URL(window.location.href);
+                            url.searchParams.set("project", project.id.toString());
+                            navigator.clipboard.writeText(url.toString());
+                            // Could add a toast notification here
+                          }}
+                          className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                          title="Copy link"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                          </svg>
+                        </button>
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${project.isPublic ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700"}`}>
+                          {project.isPublic ? "Public" : "Private"}
+                        </span>
+                      </div>
                     </div>
                     {project.description ? (
                       <p className="mt-4 text-sm leading-7 text-slate-600 line-clamp-3">{project.description}</p>
@@ -298,7 +353,7 @@ export default function HomePage() {
 
       <ViewProjectModal
         isOpen={isViewModalOpen}
-        onClose={() => setIsViewModalOpen(false)}
+        onClose={handleViewModalClose}
         project={selectedProject}
       />
     </main>
