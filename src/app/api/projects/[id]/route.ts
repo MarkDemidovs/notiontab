@@ -1,20 +1,24 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
 import { projects, profiles, projectRolesNeeded } from "~/server/db/schema";
-import { eq, or, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
-export async function GET(request: Request) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { userId } = await auth();
 
   try {
-    const url = new URL(request.url);
-    const pathSegments = url.pathname.split("/").filter(Boolean);
-    const projectId = parseInt(pathSegments[pathSegments.length - 1] ?? "");
+    // Next.js 15: params must be awaited
+    const { id } = await params;
+    const projectId = parseInt(id);
+
     if (isNaN(projectId)) {
       return Response.json({ error: "Invalid project ID" }, { status: 400 });
     }
 
-    const baseQuery = db
+    const projectData = await db
       .select({
         id: projects.id,
         clerkUserId: projects.clerkUserId,
@@ -33,16 +37,21 @@ export async function GET(request: Request) {
       .where(eq(projects.id, projectId))
       .groupBy(projects.id, profiles.fullName);
 
-    const projectData = await baseQuery;
-
-    if (projectData.length === 0) {
+    // 1. Check if the array is empty
+    if (!projectData || projectData.length === 0) {
       return Response.json({ error: "Project not found" }, { status: 404 });
     }
 
+    // 2. Grab the first result
     const project = projectData[0];
 
-    // Check if user can access this project
-    if (!project.isPublic && project.clerkUserId !== userId) {
+    // 3. Destructure specifically to handle potential nulls from the Join
+    // This tells TypeScript: "If these are null, we handle them here"
+    const isPublic = project?.isPublic;
+    const projectOwnerId = project?.clerkUserId;
+
+    // 4. Perform the authorization check safely
+    if (!isPublic && projectOwnerId !== userId) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
 
