@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
-import { SignInButton } from "@clerk/nextjs";
+import { useEffect, useState, Suspense } from "react";
+import { useAuth, SignInButton } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
 import CreateProjectModal from "./CreateProjectModal";
 import ViewProjectModal from "./ViewProjectModal";
@@ -20,7 +19,8 @@ interface Project {
   rolesNeededCount?: number;
 }
 
-export default function HomePage() {
+// Separate component to handle search params safely within Suspense
+function HomePageContent() {
   const { isSignedIn, isLoaded } = useAuth();
   const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -31,13 +31,17 @@ export default function HomePage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
+  // Fetch projects list
   useEffect(() => {
+    setLoading(true);
     void fetch(`/api/projects?mode=${isPublicMode ? "public" : "own"}`)
       .then((res) => res.json())
       .then((data: Project[]) => setProjects(data))
+      .catch((err) => console.error("Failed to fetch projects:", err))
       .finally(() => setLoading(false));
   }, [isPublicMode]);
 
+  // Handle initial 'create' param and custom events
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("create") === "true") {
@@ -52,23 +56,25 @@ export default function HomePage() {
     };
   }, []);
 
+  // Handle 'project' deep-linking
   useEffect(() => {
     const projectId = searchParams.get("project");
     if (projectId && projects.length > 0) {
-      const project = projects.find(p => p.id === parseInt(projectId));
+      const project = projects.find((p) => p.id === parseInt(projectId));
       if (project) {
         setSelectedProject(project);
         setIsViewModalOpen(true);
       } else {
-        // Fetch the specific project if not in the list
         void fetch(`/api/projects/${projectId}`)
           .then((res) => res.json())
-          .then((project: Project) => {
-            setSelectedProject(project);
-            setIsViewModalOpen(true);
+          .then((data: Project) => {
+            if (data && !("error" in data)) {
+              setSelectedProject(data);
+              setIsViewModalOpen(true);
+            }
           })
           .catch(() => {
-            // Project not found or not accessible
+            /* Silently handle not found */
           });
       }
     }
@@ -80,7 +86,6 @@ export default function HomePage() {
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    // Clean up the URL
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.delete("create");
@@ -91,7 +96,6 @@ export default function HomePage() {
   const handleViewModalClose = () => {
     setIsViewModalOpen(false);
     setSelectedProject(null);
-    // Clean up the URL
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
       url.searchParams.delete("project");
@@ -101,13 +105,10 @@ export default function HomePage() {
 
   const handleToggleMode = () => {
     if (!isPublicMode) {
-      // Already in own mode, switch to public
       setIsPublicMode(true);
     } else if (!isSignedIn && isLoaded) {
-      // Trying to switch to own mode but not signed in
       setShowSignInPrompt(true);
     } else {
-      // Signed in, switch to own mode
       setIsPublicMode(false);
     }
   };
@@ -120,7 +121,7 @@ export default function HomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Feed</p>
             <h1 className="text-3xl font-semibold text-slate-900">Discover projects</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-500">
-              Browse public projects and switch to your own work when you want a personalized view.
+              Browse public projects and switch to your own work.
             </p>
           </div>
 
@@ -139,7 +140,7 @@ export default function HomePage() {
             </div>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
             >
               + Create project
             </button>
@@ -153,7 +154,7 @@ export default function HomePage() {
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-xl font-bold text-white">N</div>
                 <div>
                   <p className="text-sm font-semibold text-slate-900">notiontab</p>
-                  <p className="text-sm text-slate-500">Project discovery made simple</p>
+                  <p className="text-sm text-slate-500">Discovery simple</p>
                 </div>
               </div>
               <div className="mt-6 grid gap-3">
@@ -166,13 +167,6 @@ export default function HomePage() {
                   <p className="mt-2 text-2xl font-semibold text-slate-900">{projects.length}</p>
                 </div>
               </div>
-            </div>
-
-            <div className="rounded-3xl bg-white p-6 shadow-sm shadow-slate-200/40">
-              <p className="text-sm font-semibold text-slate-900">Why this feed</p>
-              <p className="mt-3 text-sm leading-6 text-slate-500">
-                Public mode shows the latest open projects. Own mode shows only projects linked to your account.
-              </p>
             </div>
           </aside>
 
@@ -200,11 +194,6 @@ export default function HomePage() {
                   <span className={!isPublicMode ? "text-slate-900" : "text-slate-400"}>Own</span>
                 </div>
               </div>
-              {!isPublicMode && !isSignedIn && isLoaded && (
-                <div className="mt-4 rounded-2xl bg-blue-50 p-4 text-sm text-blue-700">
-                  <p>You need to sign in to view your own projects.</p>
-                </div>
-              )}
             </div>
 
             {loading ? (
@@ -223,9 +212,11 @@ export default function HomePage() {
                     onClick={() => {
                       setSelectedProject(project);
                       setIsViewModalOpen(true);
-                      const url = new URL(window.location.href);
-                      url.searchParams.set("project", project.id.toString());
-                      window.history.pushState({}, "", url.toString());
+                      if (typeof window !== "undefined") {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set("project", project.id.toString());
+                        window.history.pushState({}, "", url.toString());
+                      }
                     }}
                     className="cursor-pointer rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 transition hover:border-slate-300"
                   >
@@ -238,10 +229,11 @@ export default function HomePage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            const url = new URL(window.location.href);
-                            url.searchParams.set("project", project.id.toString());
-                            navigator.clipboard.writeText(url.toString());
-                            // Could add a toast notification here
+                            if (typeof window !== "undefined") {
+                              const url = new URL(window.location.href);
+                              url.searchParams.set("project", project.id.toString());
+                              void navigator.clipboard.writeText(url.toString());
+                            }
                           }}
                           className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                           title="Copy link"
@@ -260,102 +252,44 @@ export default function HomePage() {
                     ) : (
                       <p className="mt-4 text-sm leading-7 text-slate-500">No description provided.</p>
                     )}
-                    {project.tags && project.tags.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {project.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-6 grid gap-3 text-sm text-slate-500 sm:grid-cols-[auto_auto]">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span>{new Date(project.createdAt).toLocaleDateString()}</span>
-                        <span className="h-1 w-1 rounded-full bg-slate-300" />
-                        <span>{project.userFullName ?? project.clerkUserId}</span>
-                      </div>
-                      {project.rolesNeededCount ? (
-                        <div className="flex items-center justify-start sm:justify-end">
-                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
-                            {project.rolesNeededCount} role{project.rolesNeededCount > 1 ? "s" : ""} needed
-                          </span>
-                        </div>
-                      ) : null}
+                    <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                      <span>{new Date(project.createdAt).toLocaleDateString()}</span>
+                      <span className="h-1 w-1 rounded-full bg-slate-300" />
+                      <span>{project.userFullName ?? project.clerkUserId}</span>
                     </div>
                   </article>
                 ))}
               </div>
             )}
           </section>
-
-          <aside className="space-y-6">
-            <div className="rounded-3xl bg-white p-6 shadow-sm shadow-slate-200/40">
-              <p className="text-sm font-semibold text-slate-900">Quick actions</p>
-              <div className="mt-4 space-y-3">
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
-                >
-                  Create a project
-                </button>
-                <button
-                  onClick={() => setIsPublicMode(true)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  View public feed
-                </button>
-              </div>
-            </div>
-
-            <div className="rounded-3xl bg-white p-6 shadow-sm shadow-slate-200/40">
-              <p className="text-sm font-semibold text-slate-900">Why notiontab</p>
-              <p className="mt-3 text-sm leading-6 text-slate-500">
-                This feed helps you discover projects faster and switch to your own work with one tap.
-              </p>
-            </div>
-          </aside>
         </div>
       </div>
 
       {showSignInPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 px-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl shadow-slate-900/10">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl">
             <h2 className="text-xl font-semibold text-slate-900">Sign In Required</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              This requires an account and additional info to view your personal projects.
-            </p>
+            <p className="mt-3 text-sm text-slate-600">Please sign in to view your projects.</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
-                onClick={() => setShowSignInPrompt(false)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
+              <button onClick={() => setShowSignInPrompt(false)} className="w-full rounded-2xl border border-slate-200 p-3 text-sm font-semibold">Cancel</button>
               <SignInButton>
-                <button className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700">
-                  Sign in with Clerk
-                </button>
+                <button className="w-full rounded-2xl bg-blue-600 p-3 text-sm font-semibold text-white">Sign in</button>
               </SignInButton>
             </div>
           </div>
         </div>
       )}
 
-      <CreateProjectModal
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        onProjectCreated={handleProjectCreated}
-      />
-
-      <ViewProjectModal
-        isOpen={isViewModalOpen}
-        onClose={handleViewModalClose}
-        project={selectedProject}
-      />
+      <CreateProjectModal isOpen={isModalOpen} onClose={handleModalClose} onProjectCreated={handleProjectCreated} />
+      <ViewProjectModal isOpen={isViewModalOpen} onClose={handleViewModalClose} project={selectedProject} />
     </main>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }
