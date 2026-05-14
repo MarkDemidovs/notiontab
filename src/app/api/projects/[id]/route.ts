@@ -3,10 +3,8 @@ import { db } from "~/server/db";
 import { projects, profiles, projectRolesNeeded } from "~/server/db/schema";
 import { eq, or, sql } from "drizzle-orm";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, context: { params: { id: string } }) {
+  const { params } = context;
   const { userId } = await auth();
 
   try {
