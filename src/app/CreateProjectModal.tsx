@@ -96,7 +96,7 @@ export default function CreateProjectModal({ isOpen, onClose, onProjectCreated }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="flex flex-col w-full max-w-md max-h-[90vh] rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+      <div className="flex flex-col w-full max-w-full sm:max-w-md max-h-[90vh] rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-slate-100">
           <h2 className="text-xl font-semibold text-slate-900">Create New Project</h2>
           <button
@@ -165,7 +165,7 @@ export default function CreateProjectModal({ isOpen, onClose, onProjectCreated }
 
             {expanded && (
               <div className="mt-2 overflow-y-auto max-h-48">
-                <div className="grid gap-2 grid-cols-2 pt-2 pr-1">
+                <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 pt-2 pr-1">
                   {skillsConfig.map((skill) => {
                     const isSelected = tags.includes(skill.name);
                     const disabled = !isSelected && tags.length >= 3;

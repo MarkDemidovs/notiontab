@@ -115,7 +115,7 @@ function HomePageContent() {
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm shadow-slate-200/40 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Feed</p>
@@ -125,7 +125,7 @@ function HomePageContent() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <div className="relative w-full sm:w-80">
               <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,8 +147,8 @@ function HomePageContent() {
           </div>
         </header>
 
-        <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
-          <aside className="space-y-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
+          <aside className="space-y-6 min-w-0">
             <div className="rounded-3xl bg-white p-6 shadow-sm shadow-slate-200/40">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-xl font-bold text-white">N</div>
@@ -218,7 +218,7 @@ function HomePageContent() {
                         window.history.pushState({}, "", url.toString());
                       }
                     }}
-                    className="cursor-pointer rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 transition hover:border-slate-300"
+                    className="cursor-pointer min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 transition hover:border-slate-300"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
@@ -248,7 +248,7 @@ function HomePageContent() {
                       </div>
                     </div>
                     {project.description ? (
-                      <p className="mt-4 text-sm leading-7 text-slate-600 line-clamp-3">{project.description}</p>
+                      <p className="mt-4 text-sm leading-7 text-slate-600 line-clamp-3 break-words">{project.description}</p>
                     ) : (
                       <p className="mt-4 text-sm leading-7 text-slate-500">No description provided.</p>
                     )}

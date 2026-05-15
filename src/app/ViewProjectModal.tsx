@@ -24,7 +24,7 @@ export default function ViewProjectModal({ isOpen, onClose, project }: ViewProje
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="flex flex-col w-full max-w-2xl max-h-[90vh] rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+      <div className="flex flex-col w-full max-w-full sm:max-w-2xl max-h-[90vh] rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-slate-100">
           <h2 className="text-xl font-semibold text-slate-900">{project.name}</h2>
           <button

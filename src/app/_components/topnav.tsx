@@ -18,7 +18,7 @@ export default function TopNav() {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-slate-800 bg-slate-950/90 px-4 py-3 shadow-lg shadow-slate-950/20 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 text-slate-100">
+      <div className="mx-auto flex flex-wrap items-center justify-between gap-3 max-w-6xl text-slate-100">
         <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight text-white hover:text-slate-200">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-800 text-sm font-black uppercase text-slate-100">
             N
