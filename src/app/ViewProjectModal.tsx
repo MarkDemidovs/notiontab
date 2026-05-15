@@ -24,9 +24,12 @@ export default function ViewProjectModal({ isOpen, onClose, project }: ViewProje
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="flex flex-col w-full max-w-full sm:max-w-2xl max-h-[90vh] rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-          <h2 className="text-xl font-semibold text-slate-900">{project.name}</h2>
+      <div
+        className="flex flex-col w-full max-w-full sm:max-w-2xl max-h-[90vh] rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden"
+        style={{ maxWidth: "calc(100vw - 2rem)" }}
+      >
+        <div className="flex flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100">
+          <h2 className="max-w-full truncate text-xl font-semibold text-slate-900">{project.name}</h2>
           <button
             onClick={onClose}
             className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
@@ -38,10 +41,10 @@ export default function ViewProjectModal({ isOpen, onClose, project }: ViewProje
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
+          <div className="flex flex-wrap items-center justify-between gap-4 min-w-0">
+            <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Project</p>
-              <h3 className="mt-2 text-xl font-semibold text-slate-900">{project.name}</h3>
+              <h3 className="mt-2 max-w-full truncate text-xl font-semibold text-slate-900">{project.name}</h3>
             </div>
             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${project.isPublic ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700"}`}>
               {project.isPublic ? "Public" : "Private"}
@@ -73,11 +76,11 @@ export default function ViewProjectModal({ isOpen, onClose, project }: ViewProje
             </div>
           )}
 
-          <div className="grid gap-3 text-sm text-slate-500 sm:grid-cols-[auto_auto]">
-            <div className="flex flex-wrap items-center gap-3">
-              <span>Created: {new Date(project.createdAt).toLocaleDateString()}</span>
+          <div className="grid gap-3 text-sm text-slate-500 sm:grid-cols-1 md:grid-cols-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-3">
+              <span className="truncate">Created: {new Date(project.createdAt).toLocaleDateString()}</span>
               <span className="h-1 w-1 rounded-full bg-slate-300" />
-              <span>By: {project.userFullName ?? project.clerkUserId}</span>
+              <span className="truncate">By: {project.userFullName ?? project.clerkUserId}</span>
             </div>
             {project.rolesNeededCount ? (
               <div className="flex items-center justify-start sm:justify-end">

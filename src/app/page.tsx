@@ -114,7 +114,7 @@ function HomePageContent() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
+    <main className="min-h-screen bg-slate-100 text-slate-900 overflow-x-hidden">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm shadow-slate-200/40 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -220,12 +220,12 @@ function HomePageContent() {
                     }}
                     className="cursor-pointer min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 transition hover:border-slate-300"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div>
+                    <div className="flex flex-wrap items-center justify-between gap-4 min-w-0">
+                      <div className="min-w-0">
                         <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Project</p>
-                        <h3 className="mt-2 text-xl font-semibold text-slate-900">{project.name}</h3>
+                        <h3 className="mt-2 max-w-full truncate text-xl font-semibold text-slate-900">{project.name}</h3>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-shrink-0 items-center gap-2 max-w-full">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
